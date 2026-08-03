@@ -1,17 +1,19 @@
-const CACHE_NAME = "lto-exam-v1";
-const urlsToCache = ["/", "/practice", "/exam", "/flashcards"];
+const CACHE_NAME = "lto-exam-v2";
+const urlsToCache = ["/", "/practice", "/exam", "/flashcards", "/history"];
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
   );
 });
 
 self.addEventListener("fetch", (event) => {
+  // Don't intercept Next.js dev/build assets — only cache real page navigations
+  if (event.request.mode !== "navigate") return;
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
 
@@ -25,4 +27,5 @@ self.addEventListener("activate", (event) => {
       )
     )
   );
+  self.clients.claim();
 });

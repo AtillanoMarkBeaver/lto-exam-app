@@ -30,6 +30,12 @@ export default function Home() {
           >
             Sign Flashcards
           </Link>
+          <Link
+            href="/history"
+            className="rounded-xl border-2 border-slate-300 px-6 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-100"
+          >
+            Exam History
+          </Link>
         </div>
       </div>
     </div>

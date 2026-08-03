@@ -49,6 +49,26 @@ export default function Exam() {
     return () => clearTimeout(timer);
   }, [timeLeft, finished, loading, questions.length]);
 
+  // Save this attempt to local score history once finished
+  useEffect(() => {
+    if (!finished || questions.length === 0) return;
+    const score = answers.reduce<number>(
+      (total, answer, i) => (answer === questions[i].correct_index ? total + 1 : total),
+      0
+    );
+    const percentage = Math.round((score / questions.length) * 100);
+    const attempt = {
+      date: new Date().toISOString(),
+      score,
+      total: questions.length,
+      percentage,
+      passed: percentage >= 75,
+    };
+    const existing = JSON.parse(localStorage.getItem("examHistory") || "[]");
+    const updated = [attempt, ...existing].slice(0, 20); // keep last 20 attempts
+    localStorage.setItem("examHistory", JSON.stringify(updated));
+  }, [finished]);
+
   function handleSelect(index: number) {
     const updated = [...answers];
     updated[currentIndex] = index;
@@ -87,14 +107,24 @@ export default function Exam() {
       (total, answer, i) => (answer === questions[i].correct_index ? total + 1 : total),
       0
     );
+    const percentage = Math.round((score / questions.length) * 100);
+    const passed = percentage >= 75;
 
     return (
       <div className="flex min-h-screen flex-col items-center bg-slate-50 px-6 py-10">
         <div className="w-full max-w-md">
           <h1 className="text-2xl font-bold text-slate-900">Exam Results</h1>
           <p className="mt-2 text-lg text-slate-700">
-            Score: <span className="font-bold">{score}</span> / {questions.length}
+            Score: <span className="font-bold">{score}</span> / {questions.length}{" "}
+            ({percentage}%)
           </p>
+          <span
+            className={`mt-2 inline-block rounded-full px-3 py-1 text-sm font-semibold ${
+              passed ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+            }`}
+          >
+            {passed ? "PASSED" : "FAILED"}
+          </span>
 
           <div className="mt-6 flex flex-col gap-3">
             {questions.map((q, i) => {
