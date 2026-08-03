@@ -14,8 +14,9 @@ type Question = {
 };
 
 export default function Practice() {
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
 
@@ -25,7 +26,7 @@ export default function Practice() {
       if (error) {
         console.error("Error loading questions:", error);
       } else {
-        setQuestions(data as Question[]);
+        setAllQuestions(data as Question[]);
       }
       setLoading(false);
     }
@@ -40,12 +41,26 @@ export default function Practice() {
     );
   }
 
-  if (questions.length === 0) {
+  if (allQuestions.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <p className="text-slate-500">No questions found.</p>
       </div>
     );
+  }
+
+  // Build the list of unique categories, plus "All"
+  const categories = ["All", ...Array.from(new Set(allQuestions.map((q) => q.category)))];
+
+  const questions =
+    selectedCategory === "All"
+      ? allQuestions
+      : allQuestions.filter((q) => q.category === selectedCategory);
+
+  function handleCategoryChange(category: string) {
+    setSelectedCategory(category);
+    setCurrentIndex(0);
+    setSelected(null);
   }
 
   const current = questions[currentIndex];
@@ -68,6 +83,23 @@ export default function Practice() {
         <Link href="/" className="text-sm text-slate-500 hover:underline">
           ← Back to Home
         </Link>
+
+        {/* Category filter */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => handleCategoryChange(category)}
+              className={`rounded-full px-3 py-1 text-sm font-medium ${
+                selectedCategory === category
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-slate-600 border border-slate-300 hover:bg-slate-100"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
 
         <p className="mt-4 text-sm font-medium text-blue-600">
           {current.category} · Question {currentIndex + 1} of {questions.length}
