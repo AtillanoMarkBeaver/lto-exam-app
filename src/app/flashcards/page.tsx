@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import Loading from "@/lib/Loading";
 
 type Sign = {
   id: number;
@@ -30,11 +31,7 @@ export default function Flashcards() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-slate-500">Loading flashcards...</p>
-      </div>
-    );
+    return <Loading message="Loading flashcards..." />;
   }
 
   if (signs.length === 0) {

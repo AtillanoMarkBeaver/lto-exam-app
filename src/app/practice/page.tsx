@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import Loading from "@/lib/Loading";
 
 type Question = {
   id: number;
@@ -34,11 +35,7 @@ export default function Practice() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-slate-500">Loading questions...</p>
-      </div>
-    );
+    return <Loading message="Loading questions..." />;
   }
 
   if (allQuestions.length === 0) {
@@ -49,7 +46,6 @@ export default function Practice() {
     );
   }
 
-  // Build the list of unique categories, plus "All"
   const categories = ["All", ...Array.from(new Set(allQuestions.map((q) => q.category)))];
 
   const questions =
@@ -84,7 +80,6 @@ export default function Practice() {
           ← Back to Home
         </Link>
 
-        {/* Category filter */}
         <div className="mt-4 flex flex-wrap gap-2">
           {categories.map((category) => (
             <button

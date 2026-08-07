@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import Loading from "@/lib/Loading";
 
 type Question = {
   id: number;
@@ -91,11 +92,7 @@ export default function Exam() {
   }, [finished]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-slate-500">Loading questions...</p>
-      </div>
-    );
+    return <Loading message="Loading questions..." />;
   }
 
   if (allQuestions.length === 0) {

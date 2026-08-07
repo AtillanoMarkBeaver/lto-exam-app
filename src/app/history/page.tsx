@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import Loading from "@/lib/Loading";
 
 type Attempt = {
   date: string;
@@ -68,7 +69,7 @@ export default function History() {
         )}
 
         {loading ? (
-          <p className="mt-6 text-slate-500">Loading...</p>
+          <Loading message="Loading your history..." />
         ) : attempts.length === 0 ? (
           <p className="mt-6 text-slate-500">
             No mock exams taken yet. Complete one to see your history here.
