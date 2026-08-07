@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 type Attempt = {
   date: string;
@@ -9,14 +10,46 @@ type Attempt = {
   total: number;
   percentage: number;
   passed: boolean;
+  category?: string;
 };
 
 export default function History() {
   const [attempts, setAttempts] = useState<Attempt[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [signedIn, setSignedIn] = useState(false);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("examHistory") || "[]");
-    setAttempts(stored);
+    async function loadHistory() {
+      const { data: userData } = await supabase.auth.getUser();
+
+      if (userData.user) {
+        setSignedIn(true);
+        const { data, error } = await supabase
+          .from("attempts")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Error loading attempts:", error);
+        } else {
+          const formatted = data.map((row) => ({
+            date: row.created_at,
+            score: row.score,
+            total: row.total,
+            percentage: row.percentage,
+            passed: row.passed,
+            category: row.category,
+          }));
+          setAttempts(formatted);
+        }
+      } else {
+        setSignedIn(false);
+        const stored = JSON.parse(localStorage.getItem("examHistory") || "[]");
+        setAttempts(stored);
+      }
+      setLoading(false);
+    }
+    loadHistory();
   }, []);
 
   return (
@@ -28,7 +61,15 @@ export default function History() {
 
         <h1 className="mt-4 text-2xl font-bold text-slate-900">Exam History</h1>
 
-        {attempts.length === 0 ? (
+        {!signedIn && !loading && (
+          <p className="mt-2 text-sm text-slate-500">
+            Sign in with Google on the home page to sync your history across devices.
+          </p>
+        )}
+
+        {loading ? (
+          <p className="mt-6 text-slate-500">Loading...</p>
+        ) : attempts.length === 0 ? (
           <p className="mt-6 text-slate-500">
             No mock exams taken yet. Complete one to see your history here.
           </p>
@@ -51,6 +92,9 @@ export default function History() {
                 >
                   <div>
                     <p className="font-medium text-slate-900">{formattedDate}</p>
+                    {attempt.category && (
+                      <p className="text-xs text-slate-400">{attempt.category}</p>
+                    )}
                     <p className="text-sm text-slate-500">
                       {attempt.score} / {attempt.total} ({attempt.percentage}%)
                     </p>
