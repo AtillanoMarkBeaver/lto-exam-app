@@ -56,11 +56,11 @@ export default function History() {
   return (
     <div className="flex min-h-screen flex-col items-center bg-slate-50 px-6 py-10">
       <div className="w-full max-w-md">
-        <Link href="/" className="text-sm text-slate-500 hover:underline">
+        <Link href="/" className="text-sm font-medium text-slate-500 hover:text-slate-700">
           ← Back to Home
         </Link>
 
-        <h1 className="mt-4 text-2xl font-bold text-slate-900">Exam History</h1>
+        <h1 className="font-display mt-4 text-2xl font-bold text-slate-900">Exam History</h1>
 
         {!signedIn && !loading && (
           <p className="mt-2 text-sm text-slate-500">
@@ -75,7 +75,7 @@ export default function History() {
             No mock exams taken yet. Complete one to see your history here.
           </p>
         ) : (
-          <div className="mt-6 flex flex-col gap-3">
+          <div className="mt-6 flex flex-col gap-2.5">
             {attempts.map((attempt, i) => {
               const date = new Date(attempt.date);
               const formattedDate = date.toLocaleDateString("en-PH", {
@@ -89,7 +89,9 @@ export default function History() {
               return (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm"
+                  className={`flex items-center justify-between rounded-xl border-l-4 bg-white p-4 shadow-sm ${
+                    attempt.passed ? "border-[#16A34A]" : "border-[#DC2626]"
+                  }`}
                 >
                   <div>
                     <p className="font-medium text-slate-900">{formattedDate}</p>
@@ -103,8 +105,8 @@ export default function History() {
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
                       attempt.passed
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        ? "bg-green-100 text-[#16A34A]"
+                        : "bg-red-100 text-[#DC2626]"
                     }`}
                   >
                     {attempt.passed ? "PASSED" : "FAILED"}

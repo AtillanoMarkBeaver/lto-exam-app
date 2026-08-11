@@ -76,7 +76,7 @@ export default function Practice() {
   return (
     <div className="flex min-h-screen flex-col items-center bg-slate-50 px-6 py-10">
       <div className="w-full max-w-md">
-        <Link href="/" className="text-sm text-slate-500 hover:underline">
+        <Link href="/" className="text-sm font-medium text-slate-500 hover:text-slate-700">
           ← Back to Home
         </Link>
 
@@ -85,10 +85,10 @@ export default function Practice() {
             <button
               key={category}
               onClick={() => handleCategoryChange(category)}
-              className={`rounded-full px-3 py-1 text-sm font-medium ${
+              className={`rounded-lg border-l-4 px-3 py-1.5 text-sm font-medium transition ${
                 selectedCategory === category
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-slate-600 border border-slate-300 hover:bg-slate-100"
+                  ? "border-[#F59E0B] bg-[#1E40AF] text-white"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
               }`}
             >
               {category}
@@ -96,52 +96,54 @@ export default function Practice() {
           ))}
         </div>
 
-        <p className="mt-4 text-sm font-medium text-blue-600">
-          {current.category} · Question {currentIndex + 1} of {questions.length}
-        </p>
+        <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#1E40AF]">
+            {current.category} · {currentIndex + 1} of {questions.length}
+          </p>
 
-        <h1 className="mt-2 text-xl font-bold text-slate-900">
-          {current.question}
-        </h1>
+          <h1 className="font-display mt-2 text-xl font-bold text-slate-900">
+            {current.question}
+          </h1>
 
-        <div className="mt-6 flex flex-col gap-3">
-          {current.choices.map((choice, index) => {
-            const isSelected = selected === index;
-            const isRightAnswer = index === current.correct_index;
+          <div className="mt-5 flex flex-col gap-2.5">
+            {current.choices.map((choice, index) => {
+              const isSelected = selected === index;
+              const isRightAnswer = index === current.correct_index;
 
-            let styles = "border-slate-300 hover:bg-slate-100";
-            if (isAnswered && isRightAnswer) {
-              styles = "border-green-500 bg-green-50";
-            } else if (isAnswered && isSelected && !isCorrect) {
-              styles = "border-red-500 bg-red-50";
-            }
+              let styles = "border-slate-200 hover:border-slate-300 hover:bg-slate-50";
+              if (isAnswered && isRightAnswer) {
+                styles = "border-[#16A34A] bg-green-50";
+              } else if (isAnswered && isSelected && !isCorrect) {
+                styles = "border-[#DC2626] bg-red-50";
+              }
 
-            return (
-              <button
-                key={index}
-                onClick={() => handleSelect(index)}
-                className={`rounded-xl border-2 px-4 py-3 text-left font-medium text-slate-800 ${styles}`}
-              >
-                {choice}
-              </button>
-            );
-          })}
-        </div>
-
-        {isAnswered && (
-          <div className="mt-6 rounded-xl bg-white p-4 shadow-sm">
-            <p className={`font-semibold ${isCorrect ? "text-green-600" : "text-red-600"}`}>
-              {isCorrect ? "Correct!" : "Not quite."}
-            </p>
-            <p className="mt-1 text-sm text-slate-600">{current.explanation}</p>
-            <button
-              onClick={handleNext}
-              className="mt-4 w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700"
-            >
-              Next Question
-            </button>
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleSelect(index)}
+                  className={`rounded-xl border-2 px-4 py-3 text-left font-medium text-slate-800 transition ${styles}`}
+                >
+                  {choice}
+                </button>
+              );
+            })}
           </div>
-        )}
+
+          {isAnswered && (
+            <div className="mt-5 rounded-xl bg-slate-50 p-4">
+              <p className={`font-semibold ${isCorrect ? "text-[#16A34A]" : "text-[#DC2626]"}`}>
+                {isCorrect ? "Correct!" : "Not quite."}
+              </p>
+              <p className="mt-1 text-sm text-slate-600">{current.explanation}</p>
+              <button
+                onClick={handleNext}
+                className="mt-4 w-full rounded-xl bg-[#1E40AF] px-4 py-3 font-semibold text-white transition hover:bg-blue-800"
+              >
+                Next Question
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

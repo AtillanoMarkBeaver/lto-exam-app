@@ -57,20 +57,20 @@ export default function Flashcards() {
   return (
     <div className="flex min-h-screen flex-col items-center bg-slate-50 px-6 py-10">
       <div className="w-full max-w-md">
-        <Link href="/" className="text-sm text-slate-500 hover:underline">
+        <Link href="/" className="text-sm font-medium text-slate-500 hover:text-slate-700">
           ← Back to Home
         </Link>
 
-        <p className="mt-4 text-sm font-medium text-blue-600">
+        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-[#1E40AF]">
           Card {index + 1} of {signs.length}
         </p>
 
         <button
           onClick={() => setFlipped(!flipped)}
-          className="mt-4 flex min-h-[220px] w-full flex-col items-center justify-center rounded-2xl bg-white p-6 text-center shadow-md"
+          className="mt-3 flex min-h-[220px] w-full flex-col items-center justify-center rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-100 transition hover:ring-slate-200"
         >
           {!flipped ? (
-            <p className="text-xl font-bold text-slate-900">{current.name}</p>
+            <p className="font-display text-xl font-bold text-slate-900">{current.name}</p>
           ) : (
             <p className="text-slate-700">{current.meaning}</p>
           )}
@@ -80,13 +80,13 @@ export default function Flashcards() {
         <div className="mt-6 flex gap-3">
           <button
             onClick={handlePrev}
-            className="flex-1 rounded-xl border-2 border-slate-300 px-4 py-3 font-semibold text-slate-700 hover:bg-slate-100"
+            className="flex-1 rounded-xl border-2 border-slate-200 px-4 py-3 font-semibold text-slate-700 transition hover:border-slate-300"
           >
             Previous
           </button>
           <button
             onClick={handleNext}
-            className="flex-1 rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700"
+            className="flex-1 rounded-xl bg-[#1E40AF] px-4 py-3 font-semibold text-white transition hover:bg-blue-800"
           >
             Next
           </button>
