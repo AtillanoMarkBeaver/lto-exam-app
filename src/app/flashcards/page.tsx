@@ -14,14 +14,17 @@ type Sign = {
 export default function Flashcards() {
   const [signs, setSigns] = useState<Sign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
 
   useEffect(() => {
     async function loadSigns() {
+      setLoadError(false);
       const { data, error } = await supabase.from("signs").select("*");
       if (error) {
         console.error("Error loading signs:", error);
+        setLoadError(true);
       } else {
         setSigns(data as Sign[]);
       }
@@ -34,10 +37,24 @@ export default function Flashcards() {
     return <Loading message="Loading flashcards..." />;
   }
 
+  if (loadError) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50 px-6 text-center">
+        <p className="text-slate-700">Couldn&apos;t load flashcards. Check your connection and try again.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="rounded-xl bg-[#1E40AF] px-5 py-2.5 font-semibold text-white transition hover:bg-blue-800"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   if (signs.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-slate-500">No flashcards found.</p>
+        <p className="text-slate-500">No flashcards available yet.</p>
       </div>
     );
   }
@@ -67,6 +84,8 @@ export default function Flashcards() {
 
         <button
           onClick={() => setFlipped(!flipped)}
+          aria-pressed={flipped}
+          aria-label={flipped ? `Showing meaning of ${current.name}. Tap to show sign name.` : `Showing sign name ${current.name}. Tap to show its meaning.`}
           className="mt-3 flex min-h-[220px] w-full flex-col items-center justify-center rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-100 transition hover:ring-slate-200"
         >
           {!flipped ? (

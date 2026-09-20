@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LTO Exam Practice
 
-## Getting Started
+A free, installable practice app for the Philippine LTO (Land Transportation Office) written driver's exam. Built as a portfolio project during an OJT placement at LTO Regional Office IV-A.
 
-First, run the development server:
+**Live app:** [lto-exam-app.vercel.app](https://lto-exam-app.vercel.app)
+
+## Features
+
+- **Practice Mode** — answer questions one at a time with instant feedback and an explanation for each answer, filterable by category
+- **Mock Exam** — a timed exam (scaled to how many questions you choose) scored against the real 75% LTO passing threshold, with a full per-question review at the end
+- **Sign Flashcards** — flip through Philippine road signs to learn their names and meanings
+- **Exam History** — past mock exam attempts with date, score, and pass/fail, synced to your account when signed in (or saved locally on this device as a guest)
+- **Google sign-in** — sign in to sync your exam history across devices
+- **Installable PWA** — install it to your phone or desktop home screen; works offline for previously loaded content
+
+## Tech stack
+
+- [Next.js 16](https://nextjs.org/) (App Router, Turbopack) + TypeScript
+- [Tailwind CSS v4](https://tailwindcss.com/)
+- [Supabase](https://supabase.com/) (Postgres database + Auth)
+- [Vercel](https://vercel.com/) for hosting
+- Manrope (display) + Inter (body) via `next/font/google`
+
+## Getting started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) 18 or later
+- A [Supabase](https://supabase.com/) project with:
+  - a `questions` table (`category`, `question`, `choices` as jsonb, `correct_index`, `explanation`)
+  - a `signs` table (`name`, `meaning`)
+  - an `attempts` table (`user_id`, `category`, `score`, `total`, `percentage`, `passed`) with row-level security scoped to the signed-in user
+  - Google sign-in enabled under Authentication
+
+### Setup
+
+```bash
+git clone https://github.com/AtillanoMarkBeaver/lto-exam-app.git
+cd lto-exam-app
+npm install
+```
+
+Create a `.env.local` file in the project root with your Supabase credentials:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+Then start the dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view it.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/
+│   ├── page.tsx          # Home
+│   ├── practice/         # Practice Mode
+│   ├── exam/              # Mock Exam
+│   ├── flashcards/       # Sign Flashcards
+│   ├── history/          # Exam History
+│   └── manifest.ts       # PWA manifest
+└── lib/
+    ├── supabase.ts       # Supabase client
+    ├── Loading.tsx       # Shared loading spinner
+    └── sw-register.tsx   # Service worker registration
+```
 
-## Learn More
+## Deployment
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The live site deploys automatically to Vercel on every push to `main`. Supabase environment variables are configured in the Vercel project settings.

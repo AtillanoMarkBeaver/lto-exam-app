@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import Loading from "@/lib/Loading";
@@ -14,24 +14,31 @@ type Question = {
   explanation: string;
 };
 
-const EXAM_SECONDS = 120;
+// Exam length scales with how many questions are selected, instead of a
+// fixed 120s regardless of category size (previously the same 2-minute
+// budget applied whether you picked 1 category or all 63 questions).
+const SECONDS_PER_QUESTION = 45;
 
 export default function Exam() {
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [started, setStarted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
-  const [timeLeft, setTimeLeft] = useState(EXAM_SECONDS);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [finished, setFinished] = useState(false);
+  const hasSavedAttempt = useRef(false);
 
   useEffect(() => {
     async function loadQuestions() {
+      setLoadError(false);
       const { data, error } = await supabase.from("questions").select("*");
       if (error) {
         console.error("Error loading questions:", error);
+        setLoadError(true);
       } else {
         setAllQuestions(data as Question[]);
       }
@@ -40,18 +47,29 @@ export default function Exam() {
     loadQuestions();
   }, []);
 
+  // Countdown: setFinished is only ever called from inside the timeout
+  // callback (an async event, not the effect body itself), which is what
+  // React's rules-of-hooks linter requires — calling setState synchronously
+  // in the body of an effect can trigger cascading renders.
   useEffect(() => {
     if (!started || loading || finished || questions.length === 0) return;
-    if (timeLeft <= 0) {
-      setFinished(true);
-      return;
-    }
-    const timer = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
+
+    const timer = setTimeout(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          setFinished(true);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
     return () => clearTimeout(timer);
   }, [timeLeft, finished, loading, questions.length, started]);
 
   useEffect(() => {
-    if (!finished || questions.length === 0) return;
+    if (!finished || questions.length === 0 || hasSavedAttempt.current) return;
+    hasSavedAttempt.current = true;
 
     async function saveAttempt() {
       const score = answers.reduce<number>(
@@ -74,31 +92,52 @@ export default function Exam() {
         });
         if (error) console.error("Error saving attempt:", error);
       } else {
-        const attempt = {
-          date: new Date().toISOString(),
-          score,
-          total: questions.length,
-          percentage,
-          passed,
-          category: selectedCategory,
-        };
-        const existing = JSON.parse(localStorage.getItem("examHistory") || "[]");
-        const updated = [attempt, ...existing].slice(0, 20);
-        localStorage.setItem("examHistory", JSON.stringify(updated));
+        try {
+          const attempt = {
+            date: new Date().toISOString(),
+            score,
+            total: questions.length,
+            percentage,
+            passed,
+            category: selectedCategory,
+          };
+          const existing = JSON.parse(localStorage.getItem("examHistory") || "[]");
+          const updated = [attempt, ...existing].slice(0, 20);
+          localStorage.setItem("examHistory", JSON.stringify(updated));
+        } catch (err) {
+          console.error("Error saving attempt to local storage:", err);
+        }
       }
     }
 
     saveAttempt();
-  }, [finished]);
+    // questions/answers/selectedCategory are intentionally read once via the
+    // hasSavedAttempt guard above rather than re-triggering this effect —
+    // they don't change again once `finished` is true.
+  }, [finished, questions, answers, selectedCategory]);
 
   if (loading) {
     return <Loading message="Loading questions..." />;
   }
 
+  if (loadError) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50 px-6 text-center">
+        <p className="text-slate-700">Couldn&apos;t load exam questions. Check your connection and try again.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="rounded-xl bg-[#1E40AF] px-5 py-2.5 font-semibold text-white transition hover:bg-blue-800"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   if (allQuestions.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-slate-500">No questions found.</p>
+        <p className="text-slate-500">No questions available yet.</p>
       </div>
     );
   }
@@ -112,8 +151,9 @@ export default function Exam() {
     setQuestions(filtered);
     setAnswers(Array(filtered.length).fill(null));
     setCurrentIndex(0);
-    setTimeLeft(EXAM_SECONDS);
+    setTimeLeft(filtered.length * SECONDS_PER_QUESTION);
     setFinished(false);
+    hasSavedAttempt.current = false;
     setStarted(true);
   }
 
@@ -262,6 +302,7 @@ export default function Exam() {
                 <button
                   key={index}
                   onClick={() => handleSelect(index)}
+                  aria-pressed={isSelected}
                   className={`rounded-xl border-2 px-4 py-3 text-left font-medium text-slate-800 transition ${
                     isSelected ? "border-[#1E40AF] bg-blue-50" : "border-slate-200 hover:border-slate-300"
                   }`}

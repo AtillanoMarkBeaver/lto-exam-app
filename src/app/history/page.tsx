@@ -17,10 +17,12 @@ type Attempt = {
 export default function History() {
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
 
   useEffect(() => {
     async function loadHistory() {
+      setLoadError(false);
       const { data: userData } = await supabase.auth.getUser();
 
       if (userData.user) {
@@ -32,6 +34,7 @@ export default function History() {
 
         if (error) {
           console.error("Error loading attempts:", error);
+          setLoadError(true);
         } else {
           const formatted = data.map((row) => ({
             date: row.created_at,
@@ -45,8 +48,13 @@ export default function History() {
         }
       } else {
         setSignedIn(false);
-        const stored = JSON.parse(localStorage.getItem("examHistory") || "[]");
-        setAttempts(stored);
+        try {
+          const stored = JSON.parse(localStorage.getItem("examHistory") || "[]");
+          setAttempts(stored);
+        } catch (err) {
+          console.error("Error reading local exam history:", err);
+          setLoadError(true);
+        }
       }
       setLoading(false);
     }
@@ -70,6 +78,16 @@ export default function History() {
 
         {loading ? (
           <Loading message="Loading your history..." />
+        ) : loadError ? (
+          <div className="mt-6 flex flex-col items-start gap-3">
+            <p className="text-slate-700">Couldn&apos;t load your history. Check your connection and try again.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="rounded-xl bg-[#1E40AF] px-5 py-2.5 font-semibold text-white transition hover:bg-blue-800"
+            >
+              Retry
+            </button>
+          </div>
         ) : attempts.length === 0 ? (
           <p className="mt-6 text-slate-500">
             No mock exams taken yet. Complete one to see your history here.
@@ -88,7 +106,7 @@ export default function History() {
 
               return (
                 <div
-                  key={i}
+                  key={`${attempt.date}-${i}`}
                   className={`flex items-center justify-between rounded-xl border-l-4 bg-white p-4 shadow-sm ${
                     attempt.passed ? "border-[#16A34A]" : "border-[#DC2626]"
                   }`}
